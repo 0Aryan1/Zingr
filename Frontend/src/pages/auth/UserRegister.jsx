@@ -4,6 +4,7 @@ import '../../styles/auth-shared.css';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
+
 const UserRegister = () => {
 
     const navigate = useNavigate();
@@ -34,6 +35,7 @@ const UserRegister = () => {
 
     return (
         <div className="auth-page-wrapper">
+
             <div className="auth-card" role="region" aria-labelledby="user-register-title">
                 <header>
                     <h1 id="user-register-title" className="auth-title">Create your account</h1>

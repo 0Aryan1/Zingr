@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react'
 import '../../styles/profile.css'
 import { useParams } from 'react-router-dom'
 import axios from 'axios'
+import BackButton from '../../components/BackButton'
 
-const Profile = () => {
+const UserPartnerProfile = () => {
     const { id } = useParams()
     const [ profile, setProfile ] = useState(null)
     const [ videos, setVideos ] = useState([])
@@ -24,6 +25,7 @@ const Profile = () => {
 
     return (
         <main className="profile-page">
+            <BackButton />
             <section className="profile-header">
                 <div className="profile-meta">
 
@@ -39,7 +41,7 @@ const Profile = () => {
                     </div>
                 </div>
 
-                <div className="profile-stats" role="list" aria-label="Stats">
+                {/* <div className="profile-stats" role="list" aria-label="Stats">
                     <div className="profile-stat" role="listitem">
                         <span className="profile-stat-label">total meals</span>
                         <span className="profile-stat-value">{profile?.totalMeals}</span>
@@ -48,7 +50,7 @@ const Profile = () => {
                         <span className="profile-stat-label">customer served</span>
                         <span className="profile-stat-value">{profile?.customersServed}</span>
                     </div>
-                </div>
+                </div> */}
             </section>
 
             <hr className="profile-sep" />
@@ -72,4 +74,4 @@ const Profile = () => {
     )
 }
 
-export default Profile
+export default UserPartnerProfile

@@ -3,6 +3,7 @@ import '../../styles/auth-shared.css';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
+
 const FoodPartnerLogin = () => {
 
   const navigate = useNavigate();
@@ -31,6 +32,7 @@ const FoodPartnerLogin = () => {
 
   return (
     <div className="auth-page-wrapper">
+
       <div className="auth-card" role="region" aria-labelledby="partner-login-title">
         <header>
           <h1 id="partner-login-title" className="auth-title">Partner login</h1>

@@ -18,7 +18,7 @@
   margin: 0 auto;
   height: 100%;
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
 }
 
 .bottom-nav__item {
@@ -29,9 +29,15 @@
   color: var(--color-text-secondary);
   text-decoration: none;
   gap: 2px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: color var(--transition-base);
 }
 
 .bottom-nav__item.is-active { color: var(--color-text); }
+
+.bottom-nav__item:hover { color: var(--color-text); }
 
 .bottom-nav__icon { line-height: 0; }
 

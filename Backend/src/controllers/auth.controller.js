@@ -185,11 +185,63 @@ function logoutFoodPartner(req, res) {
     });
 }
 
+async function checkAuth(req, res) {
+    try {
+        const token = req.cookies.token;
+
+        if (!token) {
+            return res.status(200).json({
+                authenticated: false,
+                userType: null,
+                userId: null
+            });
+        }
+
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+        // Try to find as food partner first
+        const foodPartner = await foodPartnerModel.findById(decoded.id);
+        if (foodPartner) {
+            return res.status(200).json({
+                authenticated: true,
+                userType: 'foodPartner',
+                userId: foodPartner._id
+            });
+        }
+
+        // Try to find as user
+        const user = await userModel.findById(decoded.id);
+        if (user) {
+            return res.status(200).json({
+                authenticated: true,
+                userType: 'user',
+                userId: user._id
+            });
+        }
+
+        // Token exists but user not found
+        return res.status(200).json({
+            authenticated: false,
+            userType: null,
+            userId: null
+        });
+
+    } catch (error) {
+        console.error('Auth check error:', error);
+        return res.status(200).json({
+            authenticated: false,
+            userType: null,
+            userId: null
+        });
+    }
+}
+
 module.exports = {
     registerUser,
     loginUser,
     logoutUser,
     registerFoodPartner,
     loginFoodPartner,
-    logoutFoodPartner
+    logoutFoodPartner,
+    checkAuth
 };

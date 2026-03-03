@@ -13,5 +13,10 @@ router.post('/food-partner/register', authController.registerFoodPartner)
 router.post('/food-partner/login', authController.loginFoodPartner)
 router.get('/food-partner/logout', authController.logoutFoodPartner)
 
+// Generic logout (works for both user and food partner)
+router.post('/logout', authController.logoutUser)
+
+// Check authentication status
+router.get('/check', authController.checkAuth)
 
 module.exports = router
