@@ -32,7 +32,7 @@ app.use(express.json())
 app.use(cookieParser())
 
 app.get("/",(req,res) => {
-    res.send("Hello Aryan");
+    res.send("Hello Aryan - Backend is Live!");
 })
 
 app.use('/api/auth', authRoutes);
