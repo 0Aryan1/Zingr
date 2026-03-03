@@ -2,17 +2,23 @@ require('dotenv').config();
 const app = require('./src/app');
 const connectDB = require('./src/db/db');
 
-// Connect to database
-connectDB()
-    .then(() => {
-        console.log('Database connected successfully');
-    })
-    .catch((err) => {
-        console.log("Failed to connect to database", err);
-        process.exit(1);
-    });
+// Database connection state
+let dbConnected = false;
 
-// For local development
+// Connect to database (for serverless, this happens on cold start)
+(async () => {
+    try {
+        if (!dbConnected) {
+            await connectDB();
+            dbConnected = true;
+            console.log('Database connected successfully');
+        }
+    } catch (err) {
+        console.error("Failed to connect to database", err);
+    }
+})();
+
+// For local development only
 if (process.env.NODE_ENV !== 'production') {
     const PORT = process.env.PORT || 3000;
     app.listen(PORT, () => {
@@ -20,5 +26,5 @@ if (process.env.NODE_ENV !== 'production') {
     });
 }
 
-// Export for Vercel serverless
+// Export app for Vercel
 module.exports = app;
