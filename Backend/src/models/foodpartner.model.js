@@ -25,6 +25,14 @@ const foodPartnerSchema = new mongoose.Schema({
     password: {
         type: String,
         required: true
+    },
+    totalMeals: {
+        type: Number,
+        default: 0
+    },
+    customersServed: {
+        type: Number,
+        default: 0
     }
 })
 

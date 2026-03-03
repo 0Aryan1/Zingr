@@ -13,10 +13,26 @@ router.post('/',authMiddleWare.authFoodPartnerMiddleware,
     upload.single('video'),
     foodController.createFood)
 
-/* GET /api/food/ [protected] */
+/* GET /api/food/ [private] */
 router.get("/",
     authMiddleWare.authUserMiddleware,
     foodController.getFoodItems)
+
+router.post('/like',
+    authMiddleWare.authUserMiddleware,
+    foodController.likeFood)
+
+
+router.post('/save',
+    authMiddleWare.authUserMiddleware,
+    foodController.saveFood
+)
+
+
+router.get('/save',
+    authMiddleWare.authUserMiddleware,
+    foodController.getSaveFood
+)
 
 
 
