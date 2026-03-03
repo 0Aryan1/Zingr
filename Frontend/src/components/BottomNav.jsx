@@ -2,6 +2,7 @@ import React from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import '../styles/bottom-nav.css'
+import API_URL from '../config/api'
 
 const BottomNav = () => {
   const navigate = useNavigate()
@@ -9,7 +10,7 @@ const BottomNav = () => {
   const handleLogout = async () => {
     try {
       // Call logout API endpoint
-      await axios.get('http://localhost:3000/api/auth/user/logout', { withCredentials: true })
+      await axios.get(`${API_URL}/api/auth/user/logout`, { withCredentials: true })
       
       // Clear any stored data
       sessionStorage.clear()

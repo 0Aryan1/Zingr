@@ -2,6 +2,7 @@ import React, { useEffect, useState, useLayoutEffect, useRef } from 'react'
 import axios from 'axios';
 import '../../styles/reels.css'
 import ReelFeed from '../../components/ReelFeed'
+import API_URL from '../../config/api'
 
 const Home = () => {
     const [ videos, setVideos ] = useState([])
@@ -13,7 +14,7 @@ const Home = () => {
         // Reset hasRestored flag when component mounts
         hasRestoredRef.current = false
         
-        axios.get("http://localhost:3000/api/food", { withCredentials: true })
+        axios.get(`${API_URL}/api/food`, { withCredentials: true })
             .then(response => {
 
                 console.log(response.data);
@@ -91,7 +92,7 @@ const Home = () => {
 
     async function likeVideo(item) {
 
-        const response = await axios.post("http://localhost:3000/api/food/like", { foodId: item._id }, {withCredentials: true})
+        const response = await axios.post(`${API_URL}/api/food/like`, { foodId: item._id }, {withCredentials: true})
 
         if(response.data.like){
             console.log("Video liked");
@@ -104,7 +105,7 @@ const Home = () => {
     }
 
     async function saveVideo(item) {
-        const response = await axios.post("http://localhost:3000/api/food/save", { foodId: item._id }, { withCredentials: true })
+        const response = await axios.post(`${API_URL}/api/food/save`, { foodId: item._id }, { withCredentials: true })
         
         if(response.data.save){
             setVideos((prev) => prev.map((v) => v._id === item._id ? { ...v, savesCount: v.savesCount + 1 } : v))

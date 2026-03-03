@@ -3,6 +3,7 @@ import '../../styles/profile.css'
 import { useParams } from 'react-router-dom'
 import axios from 'axios'
 import BackButton from '../../components/BackButton'
+import API_URL from '../../config/api'
 
 const UserPartnerProfile = () => {
     const { id } = useParams()
@@ -10,7 +11,7 @@ const UserPartnerProfile = () => {
     const [ videos, setVideos ] = useState([])
 
     useEffect(() => {
-        axios.get(`http://localhost:3000/api/food-partner/${id}`, { withCredentials: true })
+        axios.get(`${API_URL}/api/food-partner/${id}`, { withCredentials: true })
             .then(response => {
                 console.log('Profile response:', response.data);
                 setProfile(response.data.foodPartner)
