@@ -19,7 +19,7 @@ const UserRegister = () => {
         const password = e.target.password.value;
 
 
-        const response = await axios.post(`${API_URL}/api/auth/user/register`, {
+        await axios.post(`${API_URL}/api/auth/user/register`, {
             fullName: firstName + " " + lastName,
             email,
             password
@@ -27,8 +27,6 @@ const UserRegister = () => {
         {
             withCredentials: true
         })
-
-        console.log(response.data);
 
         navigate("/")
 

@@ -13,13 +13,11 @@ const UserPartnerProfile = () => {
     useEffect(() => {
         axios.get(`${API_URL}/api/food-partner/${id}`, { withCredentials: true })
             .then(response => {
-                console.log('Profile response:', response.data);
                 setProfile(response.data.foodPartner)
                 setVideos(response.data.foodPartner.foodItems)
             })
-            .catch(error => {
-                console.error('Profile fetch error:', error);
-                console.error('Error response:', error.response?.data);
+            .catch(() => {
+                // Handle error silently
             })
     }, [ id ])
 

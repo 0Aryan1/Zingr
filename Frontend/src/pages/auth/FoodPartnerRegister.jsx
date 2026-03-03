@@ -28,12 +28,11 @@ const FoodPartnerRegister = () => {
       password,
       address
     }, { withCredentials: true })
-      .then(response => {
-        console.log(response.data);
+      .then(() => {
         navigate("/create-food"); // Redirect to create food page after successful registration
       })
-      .catch(error => {
-        console.error("There was an error registering!", error);
+      .catch(() => {
+        // Handle error silently or show user-friendly message
       });
   };
 

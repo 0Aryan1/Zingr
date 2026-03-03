@@ -18,8 +18,7 @@ function PartnerBottomNav() {
       
       // Redirect to login/register page
       navigate('/register')
-    } catch (error) {
-      console.error('Logout failed:', error)
+    } catch {
       // Still redirect even if API fails
       sessionStorage.clear()
       localStorage.clear()

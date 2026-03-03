@@ -34,8 +34,7 @@ const ProtectedRoute = ({ children, requiredRole }) => {
                         loading: false
                     });
                 }
-            } catch (error) {
-                console.error('Auth check error:', error);
+            } catch {
                 setAuthState({
                     isAuthenticated: false,
                     userType: null,

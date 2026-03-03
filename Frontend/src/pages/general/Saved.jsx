@@ -22,7 +22,6 @@ const Saved = () => {
                 setVideos(savedFoods)
             })
             .catch(() => {
-                console.log('No saved videos found');
                 setVideos([]) // Set empty array if no saved videos
             })
     }, [])

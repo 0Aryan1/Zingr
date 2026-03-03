@@ -16,9 +16,6 @@ const Home = () => {
         
         axios.get(`${API_URL}/api/food`, { withCredentials: true })
             .then(response => {
-
-                console.log(response.data);
-
                 setVideos(response.data.foods)
             })
             .catch(() => { /* noop: optionally handle error */ })
@@ -28,7 +25,6 @@ const Home = () => {
     useLayoutEffect(() => {
         if (videos.length > 0 && !hasRestoredRef.current) {
             const savedScrollPosition = sessionStorage.getItem('homeScrollPosition')
-            console.log('Attempting to restore scroll position:', savedScrollPosition)
             if (savedScrollPosition) {
                 const feedContainer = document.querySelector('.reels-feed')
                 if (feedContainer) {
@@ -37,7 +33,6 @@ const Home = () => {
                     feedContainer.style.scrollBehavior = 'auto'
                     
                     feedContainer.scrollTop = parseInt(savedScrollPosition, 10)
-                    console.log('Restored scroll position:', savedScrollPosition)
                     
                     // Restore smooth scrolling after a brief delay
                     setTimeout(() => {
@@ -60,7 +55,6 @@ const Home = () => {
             if (feedContainer) {
                 const position = feedContainer.scrollTop
                 sessionStorage.setItem('homeScrollPosition', position.toString())
-                console.log('Saving scroll position:', position)
             }
         }
 
@@ -91,26 +85,30 @@ const Home = () => {
     // Using local refs within ReelFeed; keeping map here for dependency parity if needed
 
     async function likeVideo(item) {
+        try {
+            const response = await axios.post(`${API_URL}/api/food/like`, { foodId: item._id }, {withCredentials: true})
 
-        const response = await axios.post(`${API_URL}/api/food/like`, { foodId: item._id }, {withCredentials: true})
-
-        if(response.data.like){
-            console.log("Video liked");
-            setVideos((prev) => prev.map((v) => v._id === item._id ? { ...v, likeCount: v.likeCount + 1 } : v))
-        }else{
-            console.log("Video unliked");
-            setVideos((prev) => prev.map((v) => v._id === item._id ? { ...v, likeCount: v.likeCount - 1 } : v))
+            if(response.data.like){
+                setVideos((prev) => prev.map((v) => v._id === item._id ? { ...v, likeCount: v.likeCount + 1 } : v))
+            }else{
+                setVideos((prev) => prev.map((v) => v._id === item._id ? { ...v, likeCount: v.likeCount - 1 } : v))
+            }
+        } catch {
+            // Silently handle error - could add toast notification here
         }
-        
     }
 
     async function saveVideo(item) {
-        const response = await axios.post(`${API_URL}/api/food/save`, { foodId: item._id }, { withCredentials: true })
-        
-        if(response.data.save){
-            setVideos((prev) => prev.map((v) => v._id === item._id ? { ...v, savesCount: v.savesCount + 1 } : v))
-        }else{
-            setVideos((prev) => prev.map((v) => v._id === item._id ? { ...v, savesCount: v.savesCount - 1 } : v))
+        try {
+            const response = await axios.post(`${API_URL}/api/food/save`, { foodId: item._id }, { withCredentials: true })
+            
+            if(response.data.save){
+                setVideos((prev) => prev.map((v) => v._id === item._id ? { ...v, savesCount: (v.savesCount || 0) + 1 } : v))
+            }else{
+                setVideos((prev) => prev.map((v) => v._id === item._id ? { ...v, savesCount: Math.max((v.savesCount || 0) - 1, 0) } : v))
+            }
+        } catch {
+            // Silently handle error - could add toast notification here
         }
     }
 

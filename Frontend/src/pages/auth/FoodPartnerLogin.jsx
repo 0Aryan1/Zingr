@@ -21,12 +21,8 @@ const FoodPartnerLogin = () => {
         password
       }, { withCredentials: true });
 
-      console.log('Login response:', response.data);
-      console.log('Food Partner ID:', response.data.foodPartnerId);
-
       navigate(`/food-partner/${response.data.foodPartnerId}`); // Redirect to profile page after login
     } catch (error) {
-      console.error('Login error:', error);
       alert('Login failed: ' + (error.response?.data?.message || 'Unknown error'));
     }
   };

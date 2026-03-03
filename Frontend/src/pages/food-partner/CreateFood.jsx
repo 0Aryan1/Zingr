@@ -58,11 +58,10 @@ const CreateFood = () => {
         formData.append('description', description);
         formData.append("video", videoFile);
 
-        const response = await axios.post(`${API_URL}/api/food`, formData, {
+        await axios.post(`${API_URL}/api/food`, formData, {
             withCredentials: true,
         })
 
-        console.log(response.data);
         navigate("/"); // Redirect to home or another page after successful creation
         // Optionally reset
         // setName(''); setDescription(''); setVideoFile(null);

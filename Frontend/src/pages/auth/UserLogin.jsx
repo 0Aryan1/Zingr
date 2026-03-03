@@ -15,12 +15,10 @@ const UserLogin = () => {
     const email = e.target.email.value;
     const password = e.target.password.value;
 
-    const response = await axios.post(`${API_URL}/api/auth/user/login`, {
+    await axios.post(`${API_URL}/api/auth/user/login`, {
       email,
       password
     }, { withCredentials: true });
-
-    console.log(response.data);
 
     navigate("/"); // Redirect to home after login
 
