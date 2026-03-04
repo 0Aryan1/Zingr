@@ -109,14 +109,18 @@ async function loginUser(req,res){
 }
 
 function logoutUser(req, res) {
-    res.clearCookie("token", {
+    // Clear cookie with explicit maxAge: 0 (more reliable than clearCookie)
+    res.cookie("token", "", {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-        path: '/'
+        path: '/',
+        maxAge: 0 // Immediately expire
     });
+    
     res.status(200).json({
-        message: "User logged out successfully"
+        message: "User logged out successfully",
+        success: true
     });
 }
 
@@ -232,14 +236,18 @@ async function loginFoodPartner(req, res) {
 }
 
 function logoutFoodPartner(req, res) {
-    res.clearCookie("token", {
+    // Clear cookie with explicit maxAge: 0 (more reliable than clearCookie)
+    res.cookie("token", "", {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-        path: '/'
+        path: '/',
+        maxAge: 0 // Immediately expire
     });
+    
     res.status(200).json({
-        message: "Food partner logged out successfully"
+        message: "Food partner logged out successfully",
+        success: true
     });
 }
 

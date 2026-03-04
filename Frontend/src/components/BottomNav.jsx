@@ -14,6 +14,9 @@ const BottomNav = () => {
       sessionStorage.clear()
       localStorage.clear()
       
+      // Small delay to ensure cookie clearing is processed by browser
+      await new Promise(resolve => setTimeout(resolve, 100))
+      
       // Force a full page reload to clear any cached state and ensure cookie is checked
       window.location.href = '/register'
     } catch (error) {
