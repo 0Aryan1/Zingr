@@ -33,6 +33,7 @@ async function registerUser(req,res){
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+            path: '/',
             maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
         })
 
@@ -85,6 +86,7 @@ async function loginUser(req,res){
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+            path: '/',
             maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
         })
 
@@ -151,6 +153,7 @@ async function registerFoodPartner(req, res) {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+            path: '/',
             maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
         })
 
@@ -205,6 +208,7 @@ async function loginFoodPartner(req, res) {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+            path: '/',
             maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
         })
 
