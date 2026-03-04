@@ -1,4 +1,4 @@
-# 🍜 Reel - Food Video Sharing Platform
+# 🍜 Zingr - Foodordering service
 
-A TikTok-style food video sharing platform built with React and Node.js.
+
 
