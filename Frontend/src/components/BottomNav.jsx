@@ -1,12 +1,10 @@
 import React from 'react'
-import { NavLink, useNavigate } from 'react-router-dom'
+import { NavLink } from 'react-router-dom'
 import axios from 'axios'
 import '../styles/bottom-nav.css'
 import API_URL from '../config/api'
 
 const BottomNav = () => {
-  const navigate = useNavigate()
-
   const handleLogout = async () => {
     try {
       // Call logout API endpoint
@@ -16,13 +14,14 @@ const BottomNav = () => {
       sessionStorage.clear()
       localStorage.clear()
       
-      // Redirect to login/register page
-      navigate('/register')
-    } catch {
-      // Still redirect even if API fails
+      // Force a full page reload to clear any cached state and ensure cookie is checked
+      window.location.href = '/register'
+    } catch (error) {
+      console.error('Logout error:', error)
+      // Still clear storage and redirect even if API fails
       sessionStorage.clear()
       localStorage.clear()
-      navigate('/register')
+      window.location.href = '/register'
     }
   }
 
