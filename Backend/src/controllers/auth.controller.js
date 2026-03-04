@@ -2,6 +2,7 @@ const userModel = require('../models/user.model');
 const foodPartnerModel = require("../models/foodpartner.model")
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const { blacklistToken, isTokenBlacklisted } = require('../services/tokenBlacklist.service');
 
 async function registerUser(req,res){
     try {
@@ -109,19 +110,33 @@ async function loginUser(req,res){
 }
 
 function logoutUser(req, res) {
-    // Clear cookie with explicit maxAge: 0 (more reliable than clearCookie)
-    res.cookie("token", "", {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-        path: '/',
-        maxAge: 0 // Immediately expire
-    });
-    
-    res.status(200).json({
-        message: "User logged out successfully",
-        success: true
-    });
+    try {
+        const token = req.cookies.token;
+        
+        // Blacklist the token so it can't be used again
+        if (token) {
+            blacklistToken(token);
+        }
+        
+        // Try to clear cookie (may not work cross-origin, but try anyway)
+        res.cookie("token", "", {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+            path: '/',
+            maxAge: 0
+        });
+        
+        res.status(200).json({
+            message: "User logged out successfully",
+            success: true
+        });
+    } catch (error) {
+        res.status(500).json({
+            message: "Logout failed",
+            error: error.message
+        });
+    }
 }
 
 async function registerFoodPartner(req, res) {
@@ -236,19 +251,33 @@ async function loginFoodPartner(req, res) {
 }
 
 function logoutFoodPartner(req, res) {
-    // Clear cookie with explicit maxAge: 0 (more reliable than clearCookie)
-    res.cookie("token", "", {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-        path: '/',
-        maxAge: 0 // Immediately expire
-    });
-    
-    res.status(200).json({
-        message: "Food partner logged out successfully",
-        success: true
-    });
+    try {
+        const token = req.cookies.token;
+        
+        // Blacklist the token so it can't be used again
+        if (token) {
+            blacklistToken(token);
+        }
+        
+        // Try to clear cookie (may not work cross-origin, but try anyway)
+        res.cookie("token", "", {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+            path: '/',
+            maxAge: 0
+        });
+        
+        res.status(200).json({
+            message: "Food partner logged out successfully",
+            success: true
+        });
+    } catch (error) {
+        res.status(500).json({
+            message: "Logout failed",
+            error: error.message
+        });
+    }
 }
 
 async function checkAuth(req, res) {
@@ -256,6 +285,15 @@ async function checkAuth(req, res) {
         const token = req.cookies.token;
 
         if (!token) {
+            return res.status(200).json({
+                authenticated: false,
+                userType: null,
+                userId: null
+            });
+        }
+        
+        // Check if token is blacklisted (logged out)
+        if (isTokenBlacklisted(token)) {
             return res.status(200).json({
                 authenticated: false,
                 userType: null,

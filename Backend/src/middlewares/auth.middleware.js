@@ -1,6 +1,7 @@
 const foodPartnerModel = require("../models/foodpartner.model")
 const userModel = require("../models/user.model")
 const jwt = require("jsonwebtoken");
+const { isTokenBlacklisted } = require('../services/tokenBlacklist.service');
 
 
 async function authFoodPartnerMiddleware(req, res, next) {
@@ -10,6 +11,13 @@ async function authFoodPartnerMiddleware(req, res, next) {
     if (!token) {
         return res.status(401).json({
             message: "Please login first"
+        })
+    }
+    
+    // Check if token is blacklisted
+    if (isTokenBlacklisted(token)) {
+        return res.status(401).json({
+            message: "Token has been revoked. Please login again."
         })
     }
 
@@ -39,6 +47,13 @@ async function authUserMiddleware(req, res, next) {
     if (!token) {
         return res.status(401).json({
             message: "Please login first"
+        })
+    }
+    
+    // Check if token is blacklisted
+    if (isTokenBlacklisted(token)) {
+        return res.status(401).json({
+            message: "Token has been revoked. Please login again."
         })
     }
 
