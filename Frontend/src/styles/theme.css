@@ -1,0 +1,377 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/* =========================================================================
+   Zingr design tokens
+   Two surfaces, not a dark-mode toggle:
+     [data-surface="commerce"] — warm off-white, for auth / restaurant / menu
+                                 / discover / partner dashboard
+     [data-surface="reels"]    — near-black, behind and around video
+   Both redefine the same shadcn variable names, so every primitive works on
+   either surface with no per-component variants.
+   ========================================================================= */
+
+@theme {
+  /* --- brand ------------------------------------------------------------ */
+  --color-brand-50: #fff1f2;
+  --color-brand-100: #ffe0e3;
+  --color-brand-200: #ffc6cc;
+  --color-brand-300: #ff9ba6;
+  --color-brand-400: #ff6b7c;
+  --color-brand-500: #ff3b4e;
+  --color-brand-600: #e8384a;
+  --color-brand-700: #c22334;
+  --color-brand-800: #a11d2c;
+  --color-brand-900: #851d29;
+
+  /* --- amber accent (ratings, badges, social proof, rewards) ------------- */
+  --color-amber-50: #fffaeb;
+  --color-amber-100: #fff1c6;
+  --color-amber-200: #ffe28a;
+  --color-amber-300: #ffc933;
+  --color-amber-400: #ffb020;
+  --color-amber-500: #f59e0b;
+  --color-amber-600: #d97706;
+
+  /* --- reels surface ---------------------------------------------------- */
+  --color-ink-950: #0a0a0a;
+  --color-ink-900: #121212;
+  --color-ink-850: #1a1a1a;
+  --color-ink-800: #242424;
+  --color-ink-700: #333333;
+
+  /* --- commerce surface (warm neutrals, not cool slate) ------------------ */
+  --color-cream-50: #faf8f5;
+  --color-cream-100: #f4f0ea;
+  --color-cream-200: #ede6de;
+  --color-cream-300: #ddd3c8;
+  --color-cream-600: #7a6f64;
+  --color-cream-700: #574e46;
+  --color-cream-900: #17120f;
+
+  /* --- semantic --------------------------------------------------------- */
+  --color-success: #12b76a;
+  --color-success-soft: #d6f5e5;
+  --color-warning: #f79009;
+  --color-destructive: #d92d20;
+
+  /* --- typography ------------------------------------------------------- */
+  --font-display: "Fraunces", "Iowan Old Style", Georgia, serif;
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, sans-serif;
+
+  /* --- radius ----------------------------------------------------------- */
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+
+  /* --- elevation: soft and low-opacity, never hard drop shadows ---------- */
+  --shadow-soft: 0 1px 2px rgb(23 18 15 / 0.04), 0 2px 8px rgb(23 18 15 / 0.05);
+  --shadow-lift: 0 2px 4px rgb(23 18 15 / 0.04), 0 12px 28px -8px rgb(23 18 15 / 0.12);
+  --shadow-sheet: 0 -2px 8px rgb(23 18 15 / 0.04), 0 -18px 48px -12px rgb(23 18 15 / 0.18);
+  --shadow-glow-brand: 0 8px 24px -8px rgb(255 59 78 / 0.45);
+  --shadow-glow-amber: 0 8px 24px -8px rgb(255 176 32 / 0.4);
+
+  /* --- layout rails ----------------------------------------------------- */
+  --reel-column: 440px;
+  --rail-width: 320px;
+  --sidebar-width: 244px;
+  --sidebar-rail: 76px;
+
+  /* --- motion ----------------------------------------------------------- */
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+
+  --animate-heart-burst: heart-burst 600ms var(--ease-out-soft);
+  --animate-heart-ping: heart-ping 700ms var(--ease-out-soft);
+  --animate-heart-drop: heart-drop 900ms var(--ease-out-soft) forwards;
+  --animate-bookmark-fill: bookmark-fill 450ms var(--ease-out-soft);
+  --animate-shimmer: shimmer 1.6s linear infinite;
+  --animate-float-in: float-in 420ms var(--ease-out-soft) both;
+  --animate-count-pop: count-pop 320ms var(--ease-out-soft);
+
+  @keyframes heart-burst {
+    0% { transform: scale(1); }
+    22% { transform: scale(0.82); }
+    50% { transform: scale(1.28); }
+    72% { transform: scale(0.94); }
+    100% { transform: scale(1); }
+  }
+
+  /* the expanding ring behind the heart */
+  @keyframes heart-ping {
+    0% { transform: scale(0.6); opacity: 0.55; }
+    100% { transform: scale(2.4); opacity: 0; }
+  }
+
+  /* the big centred heart on double-tap */
+  @keyframes heart-drop {
+    0% { transform: scale(0.3) rotate(-12deg); opacity: 0; }
+    18% { transform: scale(1.18) rotate(4deg); opacity: 1; }
+    36% { transform: scale(0.96) rotate(-2deg); opacity: 1; }
+    50% { transform: scale(1) rotate(0deg); opacity: 1; }
+    100% { transform: scale(1.35) rotate(0deg); opacity: 0; }
+  }
+
+  @keyframes bookmark-fill {
+    0% { transform: scale(1) translateY(0); }
+    30% { transform: scale(0.86) translateY(2px); }
+    60% { transform: scale(1.16) translateY(-3px); }
+    100% { transform: scale(1) translateY(0); }
+  }
+
+  @keyframes shimmer {
+    0% { background-position: -180% 0; }
+    100% { background-position: 180% 0; }
+  }
+
+  @keyframes float-in {
+    0% { opacity: 0; transform: translateY(12px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes count-pop {
+    0% { transform: translateY(0) scale(1); }
+    45% { transform: translateY(-3px) scale(1.14); }
+    100% { transform: translateY(0) scale(1); }
+  }
+}
+
+/* =========================================================================
+   Surface: commerce (default)
+   ========================================================================= */
+:root,
+[data-surface="commerce"] {
+  --background: var(--color-cream-50);
+  --foreground: var(--color-cream-900);
+
+  --card: #ffffff;
+  --card-foreground: var(--color-cream-900);
+  --popover: #ffffff;
+  --popover-foreground: var(--color-cream-900);
+
+  --primary: var(--color-brand-600);
+  --primary-foreground: #ffffff;
+
+  --secondary: var(--color-cream-100);
+  --secondary-foreground: var(--color-cream-900);
+
+  --muted: var(--color-cream-100);
+  --muted-foreground: var(--color-cream-600);
+
+  --accent: var(--color-amber-400);
+  --accent-foreground: #3d2a06;
+
+  --destructive: var(--color-destructive);
+  --destructive-foreground: #ffffff;
+
+  --border: var(--color-cream-200);
+  --input: var(--color-cream-200);
+  --ring: var(--color-brand-500);
+
+  --radius: var(--radius-md);
+
+  /* surface-aware helpers used by hand-rolled components */
+  --overlay-scrim: rgb(23 18 15 / 0.45);
+  --skeleton-base: var(--color-cream-100);
+  --skeleton-sheen: rgb(255 255 255 / 0.75);
+}
+
+/* =========================================================================
+   Surface: reels — video contrast wins over brand colour here
+   ========================================================================= */
+[data-surface="reels"] {
+  --background: var(--color-ink-950);
+  --foreground: #fafafa;
+
+  --card: var(--color-ink-900);
+  --card-foreground: #fafafa;
+  --popover: var(--color-ink-850);
+  --popover-foreground: #fafafa;
+
+  --primary: var(--color-brand-500);
+  --primary-foreground: #ffffff;
+
+  --secondary: var(--color-ink-800);
+  --secondary-foreground: #fafafa;
+
+  --muted: var(--color-ink-850);
+  --muted-foreground: #a1a1a1;
+
+  --accent: var(--color-amber-300);
+  --accent-foreground: #1a1203;
+
+  --destructive: #f97066;
+  --destructive-foreground: #ffffff;
+
+  --border: rgb(255 255 255 / 0.12);
+  --input: rgb(255 255 255 / 0.16);
+  --ring: var(--color-brand-400);
+
+  --overlay-scrim: rgb(0 0 0 / 0.55);
+  --skeleton-base: var(--color-ink-850);
+  --skeleton-sheen: rgb(255 255 255 / 0.07);
+}
+
+/* Map the surface variables into Tailwind's colour namespace so
+   `bg-background`, `text-muted-foreground`, `border-border` etc. resolve. */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --radius-DEFAULT: var(--radius);
+}
+
+/* =========================================================================
+   Base
+   ========================================================================= */
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+    width: 100%;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Display face is a headline accent only — never body or dense UI. */
+  .font-display {
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
+    font-variation-settings: "SOFT" 40, "WONK" 1;
+    letter-spacing: -0.015em;
+  }
+
+  /* Tabular figures for stat numbers so they don't jitter as counts change. */
+  .stat-numerals {
+    font-family: var(--font-display);
+    font-variant-numeric: tabular-nums;
+    font-variation-settings: "SOFT" 20, "WONK" 0;
+    letter-spacing: -0.02em;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background: var(--color-brand-500);
+    color: #fff;
+  }
+
+  /* The reels surface should never show a light scrollbar gutter. */
+  [data-surface="reels"] {
+    scrollbar-color: var(--color-ink-700) transparent;
+  }
+}
+
+@layer utilities {
+  /* Shimmer placeholder for video posters and image tiles. */
+  .shimmer {
+    background-color: var(--skeleton-base);
+    background-image: linear-gradient(
+      100deg,
+      transparent 20%,
+      var(--skeleton-sheen) 50%,
+      transparent 80%
+    );
+    background-size: 220% 100%;
+    background-repeat: no-repeat;
+    animation: var(--animate-shimmer);
+  }
+
+  /* Bottom-anchored scrim so caption text stays legible on any video. */
+  .scrim-bottom {
+    background: linear-gradient(
+      to top,
+      rgb(0 0 0 / 0.78) 0%,
+      rgb(0 0 0 / 0.45) 28%,
+      rgb(0 0 0 / 0.12) 58%,
+      transparent 100%
+    );
+  }
+
+  .scrim-top {
+    background: linear-gradient(
+      to bottom,
+      rgb(0 0 0 / 0.42) 0%,
+      rgb(0 0 0 / 0.12) 60%,
+      transparent 100%
+    );
+  }
+
+  .glass {
+    background-color: rgb(0 0 0 / 0.32);
+    backdrop-filter: blur(10px) saturate(1.1);
+    -webkit-backdrop-filter: blur(10px) saturate(1.1);
+  }
+
+  .safe-b {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .safe-t {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  .no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* =========================================================================
+   Reduced motion — one global kill-switch for every keyframe above.
+   ========================================================================= */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .shimmer {
+    background-image: none;
+  }
+}
