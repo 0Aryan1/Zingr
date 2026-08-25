@@ -1,6 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useCallback, useRef, useState } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
-import { Bookmark, Heart, Volume2, VolumeX, X } from 'lucide-react'
+import { Bookmark, Heart, Play, Volume2, VolumeX, X } from 'lucide-react'
 
 import { compactNumber } from '@/lib/format'
 import { ikVideo } from '@/lib/imagekit'
@@ -9,15 +9,47 @@ import { ikVideo } from '@/lib/imagekit'
 export default function ReelLightbox({ item, onOpenChange }) {
   const videoRef = useRef(null)
   const [muted, setMuted] = useState(true)
+  const [playing, setPlaying] = useState(false)
 
-  useEffect(() => {
-    if (!item) return
+  /**
+   * Start playback once the element actually has data, not when `item`
+   * changes — at that point the new source hasn't loaded and play() rejects.
+   * `muted` is forced on the DOM node first: an unmuted autoplay attempt is
+   * refused outright by every browser.
+   */
+  const startPlayback = useCallback(() => {
     const video = videoRef.current
-    video?.play().catch(() => {})
-  }, [item])
+    if (!video) return
+    video.muted = true
+    video
+      .play()
+      .then(() => setPlaying(true))
+      .catch(() => setPlaying(false))
+  }, [])
+
+  const togglePlay = useCallback(() => {
+    const video = videoRef.current
+    if (!video) return
+    if (video.paused) {
+      video.play().then(() => setPlaying(true)).catch(() => setPlaying(false))
+    } else {
+      video.pause()
+      setPlaying(false)
+    }
+  }, [])
+
+  const handleOpenChange = useCallback(
+    (open) => {
+      // Reset here rather than in an effect: the keyed <video> remounts per
+      // reel, so a fresh element always starts paused.
+      if (!open) setPlaying(false)
+      onOpenChange?.(open)
+    },
+    [onOpenChange],
+  )
 
   return (
-    <Dialog.Root open={Boolean(item)} onOpenChange={onOpenChange}>
+    <Dialog.Root open={Boolean(item)} onOpenChange={handleOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0" />
         <Dialog.Content
@@ -30,14 +62,37 @@ export default function ReelLightbox({ item, onOpenChange }) {
             <>
               <div className="relative aspect-[9/16] w-full bg-black">
                 <video
+                  // Remount per reel so a new source never inherits the
+                  // previous element's playback state.
+                  key={item._id}
                   ref={videoRef}
                   className="size-full object-cover"
                   src={ikVideo(item.video)}
                   muted={muted}
                   playsInline
                   loop
+                  preload="metadata"
                   controls={false}
+                  onLoadedData={startPlayback}
+                  onPlay={() => setPlaying(true)}
+                  onPause={() => setPlaying(false)}
                 />
+
+                {/* Tap surface + explicit play affordance. Without this, a
+                    refused autoplay left a frozen first frame and no way to
+                    start the video at all. */}
+                <button
+                  type="button"
+                  onClick={togglePlay}
+                  aria-label={playing ? 'Pause' : 'Play'}
+                  className="absolute inset-0 z-10 grid place-items-center focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white"
+                >
+                  {!playing && (
+                    <span className="grid size-16 place-items-center rounded-full bg-black/45 backdrop-blur-md transition-transform duration-200 hover:scale-105">
+                      <Play className="size-7 fill-white text-white" />
+                    </span>
+                  )}
+                </button>
 
                 <div className="pointer-events-none absolute inset-x-0 bottom-0 h-2/5 scrim-bottom" />
 
@@ -45,7 +100,7 @@ export default function ReelLightbox({ item, onOpenChange }) {
                   type="button"
                   onClick={() => setMuted((v) => !v)}
                   aria-label={muted ? 'Unmute' : 'Mute'}
-                  className="absolute bottom-3 right-3 grid size-10 place-items-center rounded-full glass border border-white/15 text-white transition-transform hover:scale-105 active:scale-90"
+                  className="absolute bottom-3 right-3 z-20 grid size-10 place-items-center rounded-full glass border border-white/15 text-white transition-transform hover:scale-105 active:scale-90"
                 >
                   {muted ? <VolumeX className="size-[18px]" /> : <Volume2 className="size-[18px]" />}
                 </button>
@@ -78,7 +133,7 @@ export default function ReelLightbox({ item, onOpenChange }) {
           )}
 
           <Dialog.Close
-            className="absolute right-3 top-3 grid size-9 place-items-center rounded-full glass border border-white/15 text-white transition-transform hover:scale-105 active:scale-90 focus-visible:ring-2 focus-visible:ring-white"
+            className="absolute right-3 top-3 z-20 grid size-9 place-items-center rounded-full glass border border-white/15 text-white transition-transform hover:scale-105 active:scale-90 focus-visible:ring-2 focus-visible:ring-white"
             aria-label="Close"
           >
             <X className="size-4" />

@@ -34,10 +34,21 @@ function withTransform(url, tr) {
 }
 
 /**
- * Video source sized for the surface it plays on.
- * Reels never render wider than ~480 CSS px, so 720 covers 1.5x DPR.
+ * Playback source for a reel.
+ *
+ * Returns the ORIGINAL url untouched by default. A `?tr=` video transform is
+ * metered in Video Processing Units on every plan, and once that allowance is
+ * spent — or if the asset has no extension for ImageKit to recognise — the
+ * transformed url starts failing while the raw url keeps serving fine. That
+ * failure mode is silent and looks exactly like "the thumbnail shows but the
+ * video won't play", since stills here are rendered from the raw url.
+ *
+ * Playing the original is what this app did before the redesign, and it costs
+ * no VPUs. Pass `{ transform: true }` to opt in once you've confirmed the
+ * account has headroom.
  */
-export function ikVideo(url, { width = 720 } = {}) {
+export function ikVideo(url, { width = 720, transform = false } = {}) {
+  if (!transform) return url
   return withTransform(url, `f-auto,q-auto,w-${width}`)
 }
 
