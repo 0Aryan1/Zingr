@@ -3,16 +3,21 @@
  *
  * The backend stores bare upload URLs (`https://ik.imagekit.io/<id>/<uuid>`)
  * with no transformation applied, so videos are served at original resolution
- * and bitrate. ImageKit accepts query-string transforms, which means we can
- * request format-optimised, width-appropriate assets purely client-side —
- * no backend change required.
+ * and bitrate. ImageKit accepts query-string transforms, which means playback
+ * can be optimised purely client-side with no backend change.
  *
- * Reference: `tr` accepts comma-separated params.
- *   f-auto  → best format the browser accepts
- *   q-auto  → adaptive quality
- *   w-<n>   → resize width
- *   so-<s>  → "start offset": grab a still frame at <s> seconds (poster)
- *   bl-<n>  → blur, for the low-quality placeholder
+ * Two constraints shape what's safe to use here:
+ *
+ *  - `storage.service.js` uploads with `fileName: uuid()` — a bare uuid with
+ *    NO file extension. ImageKit's video-thumbnail path (`/ik-thumbnail.jpg`)
+ *    keys off a recognisable video asset, so it is unreliable for these URLs.
+ *  - Video transformations are metered in Video Processing Units on every
+ *    plan, free included. Generating a still per grid tile burns them on each
+ *    page view.
+ *
+ * So still frames are produced client-side by `ReelThumb` instead. The
+ * thumbnail helper below is kept, in the correct documented form, for if the
+ * backend later uploads with a proper `.mp4` extension.
  */
 
 const IK_HOST = 'ik.imagekit.io'
@@ -37,22 +42,14 @@ export function ikVideo(url, { width = 720 } = {}) {
 }
 
 /**
- * Sharp poster frame — the first frame of the video, used as the `poster`
- * attribute so a reel shows food instead of black while it buffers.
+ * Server-side still frame, in ImageKit's documented form:
+ *   https://ik.imagekit.io/<id>/<video>.mp4/ik-thumbnail.jpg?tr=so-1,w-480
+ *
+ * NOT wired up by default — see the note above. `ReelThumb` handles stills.
+ * Enable this only once uploads carry a video extension, and budget for the
+ * VPU cost of one generation per distinct thumbnail.
  */
-export function ikPoster(url, { width = 480, second = 1 } = {}) {
-  return withTransform(url, `so-${second},f-auto,q-70,w-${width}`)
-}
-
-/**
- * Blurred low-quality placeholder. Tiny payload, renders instantly, and sits
- * under the sharp poster so there is never a flash of empty black.
- */
-export function ikBlurPlaceholder(url, { second = 1 } = {}) {
-  return withTransform(url, `so-${second},f-auto,q-20,w-64,bl-12`)
-}
-
-/** Grid/thumbnail still, for discover tiles and the partner reel grid. */
-export function ikThumb(url, { width = 320, second = 1 } = {}) {
-  return withTransform(url, `so-${second},f-auto,q-70,w-${width}`)
+export function ikThumbnailUrl(url, { width = 480, second = 1 } = {}) {
+  if (!isImageKit(url)) return url
+  return `${url}/ik-thumbnail.jpg?tr=so-${second},w-${width}`
 }

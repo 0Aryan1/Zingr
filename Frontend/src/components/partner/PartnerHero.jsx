@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { Play, Volume2, VolumeX } from 'lucide-react'
 
 import usePrefersReducedMotion from '@/hooks/usePrefersReducedMotion'
-import { ikBlurPlaceholder, ikPoster, ikVideo } from '@/lib/imagekit'
+import { ikVideo } from '@/lib/imagekit'
 import { cn } from '@/lib/utils'
 
 /**
@@ -50,12 +50,6 @@ export default function PartnerHero({ item, className }) {
         className,
       )}
     >
-      <img
-        src={ikBlurPlaceholder(item.video)}
-        alt=""
-        aria-hidden="true"
-        className="absolute inset-0 size-full scale-110 object-cover blur-xl"
-      />
       {!ready && <div className="shimmer absolute inset-0 opacity-40" aria-hidden="true" />}
 
       <video
@@ -64,12 +58,18 @@ export default function PartnerHero({ item, className }) {
           'relative size-full object-cover transition-opacity duration-500',
           ready ? 'opacity-100' : 'opacity-0',
         )}
-        src={reducedMotion ? undefined : ikVideo(item.video, { width: 960 })}
-        poster={ikPoster(item.video, { width: 960 })}
+        // Under reduced motion the source still loads, seeked to a frame, so
+        // the hero shows the dish as a still instead of going blank — it just
+        // never autoplays.
+        src={
+          reducedMotion
+            ? `${ikVideo(item.video, { width: 960 })}#t=0.1`
+            : ikVideo(item.video, { width: 960 })
+        }
         muted={muted}
         playsInline
         loop
-        preload={reducedMotion ? 'none' : 'metadata'}
+        preload="metadata"
         onLoadedData={() => setReady(true)}
       />
 

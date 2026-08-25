@@ -8,8 +8,8 @@ import SaveButton from '@/components/reels/SaveButton'
 import { BrandAvatar } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { usePartner } from '@/hooks/usePartner'
+import ReelThumb from '@/components/reels/ReelThumb'
 import { compactNumber } from '@/lib/format'
-import { ikThumb } from '@/lib/imagekit'
 
 /**
  * Desktop-only rail beside the reel column — the Instagram-web pattern where
@@ -92,12 +92,9 @@ export default function ReelSideRail({
                   to={`/user-partner-profile/${suggestion.foodPartner}`}
                   className="group flex items-center gap-3 rounded-[var(--radius-sm)] p-1 transition-colors hover:bg-white/5 focus-visible:ring-2 focus-visible:ring-white"
                 >
-                  <img
-                    src={ikThumb(suggestion.video, { width: 120 })}
-                    alt=""
-                    loading="lazy"
-                    className="size-12 shrink-0 rounded-[var(--radius-sm)] object-cover"
-                  />
+                  <span className="relative size-12 shrink-0 overflow-hidden rounded-[var(--radius-sm)] bg-ink-850">
+                    <ReelThumb src={suggestion.video} />
+                  </span>
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-[13.5px] font-semibold text-white">
                       {suggestion.name || 'Untitled dish'}

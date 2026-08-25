@@ -6,8 +6,8 @@ import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import useDebouncedValue from '@/hooks/useDebouncedValue'
 import api from '@/lib/api'
+import ReelThumb from '@/components/reels/ReelThumb'
 import { compactNumber } from '@/lib/format'
-import { ikThumb } from '@/lib/imagekit'
 import { cn } from '@/lib/utils'
 
 /**
@@ -127,12 +127,9 @@ const DiscoverTile = React.memo(function DiscoverTile({ item, index }) {
           'focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
         )}
       >
-        <img
-          src={ikThumb(item.video, { width: featured ? 640 : 320 })}
-          alt=""
-          loading="lazy"
-          decoding="async"
-          className="absolute inset-0 size-full object-cover transition-transform duration-500 group-hover:scale-105"
+        <ReelThumb
+          src={item.video}
+          className="transition-transform duration-500 group-hover:scale-105"
         />
 
         <div className="absolute inset-x-0 bottom-0 h-3/5 scrim-bottom" aria-hidden="true" />

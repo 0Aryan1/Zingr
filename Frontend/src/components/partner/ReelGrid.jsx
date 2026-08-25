@@ -1,8 +1,8 @@
 import React, { memo } from 'react'
 import { Bookmark, Heart, Play } from 'lucide-react'
 
+import ReelThumb from '@/components/reels/ReelThumb'
 import { compactNumber } from '@/lib/format'
-import { ikThumb } from '@/lib/imagekit'
 import { cn } from '@/lib/utils'
 
 /**
@@ -42,12 +42,9 @@ const ReelTile = memo(function ReelTile({ item, onSelect }) {
           'focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
         )}
       >
-        <img
-          src={ikThumb(item.video, { width: 320 })}
-          alt={item.name ? `${item.name} reel` : 'Reel'}
-          loading="lazy"
-          decoding="async"
-          className="absolute inset-0 size-full object-cover transition-transform duration-500 group-hover:scale-105"
+        <ReelThumb
+          src={item.video}
+          className="transition-transform duration-500 group-hover:scale-105"
         />
 
         <div className="absolute inset-x-0 bottom-0 h-1/2 scrim-bottom" aria-hidden="true" />

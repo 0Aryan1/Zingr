@@ -56,8 +56,10 @@ function BrandAvatar({ name, className, ...props }) {
         delayMs={0}
         className="font-display text-white"
         style={{
-          // Lightness kept low enough that white initials stay legible.
-          background: `linear-gradient(135deg, hsl(${hue} 82% 50%), hsl(${hue + 18} 88% 42%))`,
+          // Lightness has to stay this low for white initials to clear 4.5:1
+          // at the amber end of the hue range — a mid-lightness amber only
+          // manages ~2.3:1 against white.
+          background: `linear-gradient(135deg, hsl(${hue} 76% 32%), hsl(${hue + 16} 82% 26%))`,
         }}
       >
         {initials(name)}

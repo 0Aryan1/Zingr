@@ -3,7 +3,7 @@ import * as Dialog from '@radix-ui/react-dialog'
 import { Bookmark, Heart, Volume2, VolumeX, X } from 'lucide-react'
 
 import { compactNumber } from '@/lib/format'
-import { ikPoster, ikVideo } from '@/lib/imagekit'
+import { ikVideo } from '@/lib/imagekit'
 
 /** Plays a single reel from the grid, phone-shaped, on a dimmed backdrop. */
 export default function ReelLightbox({ item, onOpenChange }) {
@@ -33,7 +33,6 @@ export default function ReelLightbox({ item, onOpenChange }) {
                   ref={videoRef}
                   className="size-full object-cover"
                   src={ikVideo(item.video)}
-                  poster={ikPoster(item.video)}
                   muted={muted}
                   playsInline
                   loop

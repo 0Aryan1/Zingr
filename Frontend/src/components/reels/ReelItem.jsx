@@ -6,7 +6,7 @@ import ReelActionButton from '@/components/reels/ReelActionButton'
 import ReelCaption from '@/components/reels/ReelCaption'
 import SaveButton from '@/components/reels/SaveButton'
 import { usePartner } from '@/hooks/usePartner'
-import { ikBlurPlaceholder, ikPoster, ikVideo } from '@/lib/imagekit'
+import { ikVideo } from '@/lib/imagekit'
 import { cn } from '@/lib/utils'
 
 /**
@@ -46,8 +46,6 @@ function ReelItem({
 
   const partner = usePartner(active ? item.foodPartner : null)
 
-  const poster = ikPoster(item.video)
-  const placeholder = ikBlurPlaceholder(item.video)
   const source = active ? ikVideo(item.video) : undefined
 
   /* ---- autoplay / pause on visibility ---- */
@@ -146,14 +144,10 @@ function ReelItem({
           'md:rounded-[var(--radius-lg)] md:border md:border-white/10 md:shadow-2xl',
         )}
       >
-        {/* blurred LQIP under everything so there is never a flash of black */}
-        <img
-          src={placeholder}
-          alt=""
-          aria-hidden="true"
-          className="absolute inset-0 size-full scale-110 object-cover blur-xl"
-        />
-
+        {/* Shimmer under the video so there is never a flash of flat black.
+            A server-generated LQIP would be nicer, but these uploads have no
+            file extension for ImageKit's thumbnail path to key off — see
+            lib/imagekit.js. */}
         {!ready && <div className="absolute inset-0 shimmer opacity-40" aria-hidden="true" />}
 
         <video
@@ -163,7 +157,6 @@ function ReelItem({
             ready ? 'opacity-100' : 'opacity-0',
           )}
           src={source}
-          poster={poster}
           muted={muted}
           playsInline
           loop

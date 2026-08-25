@@ -21,8 +21,8 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import api from '@/lib/api'
+import ReelThumb from '@/components/reels/ReelThumb'
 import { sumBy } from '@/lib/format'
-import { ikThumb } from '@/lib/imagekit'
 import { cn } from '@/lib/utils'
 
 /**
@@ -232,12 +232,9 @@ function MenuList({ items, onSelect }) {
             onClick={() => onSelect?.(item)}
             className="flex w-full items-center gap-4 p-3.5 text-left transition-colors hover:bg-secondary focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
           >
-            <img
-              src={ikThumb(item.video, { width: 160 })}
-              alt=""
-              loading="lazy"
-              className="size-16 shrink-0 rounded-[var(--radius-sm)] object-cover"
-            />
+            <span className="relative size-16 shrink-0 overflow-hidden rounded-[var(--radius-sm)] bg-muted">
+              <ReelThumb src={item.video} />
+            </span>
             <span className="min-w-0 flex-1">
               <span className="block text-[15px] font-bold text-foreground">
                 {item.name || 'Untitled dish'}

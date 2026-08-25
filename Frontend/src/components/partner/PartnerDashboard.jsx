@@ -17,8 +17,8 @@ import { BrandAvatar } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import api from '@/lib/api'
+import ReelThumb from '@/components/reels/ReelThumb'
 import { compactNumber, sumBy } from '@/lib/format'
-import { ikThumb } from '@/lib/imagekit'
 
 /**
  * Partner dashboard at `/food-partner/:id`.
@@ -141,12 +141,9 @@ export default function PartnerDashboard({ id }) {
       {/* ---------------- top performer ---------------- */}
       {stats.topReel && stats.reels > 1 && (
         <section className="mt-8 flex items-center gap-4 rounded-[var(--radius-lg)] border border-amber-200 bg-amber-50 p-4">
-          <img
-            src={ikThumb(stats.topReel.video, { width: 160 })}
-            alt=""
-            loading="lazy"
-            className="size-16 shrink-0 rounded-[var(--radius-sm)] object-cover"
-          />
+          <span className="relative size-16 shrink-0 overflow-hidden rounded-[var(--radius-sm)] bg-amber-100">
+            <ReelThumb src={stats.topReel.video} />
+          </span>
           <div className="min-w-0 flex-1">
             <p className="flex items-center gap-1.5 text-[12px] font-bold uppercase tracking-wide text-amber-600">
               <Trophy className="size-3.5" />
