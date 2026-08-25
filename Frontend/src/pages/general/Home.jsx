@@ -1,14 +1,23 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
+import { WifiOff } from 'lucide-react'
 
 import ReelFeed from '@/components/ReelFeed'
 import ReelFeedSkeleton from '@/components/reels/ReelFeedSkeleton'
-import api from '@/lib/api'
+import api, { errorMessage } from '@/lib/api'
 
-const RESTORE_KEY = 'homeScrollPosition'
+/**
+ * Deliberately NOT the old `homeScrollPosition` key. That one held a scroll
+ * offset in pixels; this holds a reel index. Reusing it meant a browser still
+ * carrying a legacy value (e.g. "2436") pointed the feed at item 2436 of a
+ * three-item list, which rendered an empty scroller — the feed looked like it
+ * had no videos at all.
+ */
+const RESTORE_KEY = 'zingr:feed-index:v1'
 
 const Home = () => {
   const [videos, setVideos] = useState([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState('')
   const [likedIds, setLikedIds] = useState(() => new Set())
   const [savedIds, setSavedIds] = useState(() => new Set())
 
@@ -16,33 +25,25 @@ const Home = () => {
     api
       .get('/api/food')
       .then((response) => {
-        setVideos(response.data.foods)
+        const foods = response.data.foods ?? []
+        setVideos(foods)
+        // The feed now reports this user's like/save state per reel, so the
+        // heart and bookmark render filled on first paint instead of resetting
+        // on every reload.
+        setLikedIds(new Set(foods.filter((f) => f.isLiked).map((f) => f._id)))
+        setSavedIds(new Set(foods.filter((f) => f.isSaved).map((f) => f._id)))
       })
-      .catch(() => {
-        /* noop: optionally handle error */
+      .catch((error) => {
+        // A swallowed failure here was indistinguishable from an empty feed:
+        // the user saw "No videos available" whether the request 401'd, the
+        // network dropped, or there genuinely were no reels.
+        setLoadError(errorMessage(error, 'Could not load the feed.'))
       })
       .finally(() => setLoading(false))
   }, [])
 
-  // Hydrate saved state so bookmarks render filled on load. There is no
-  // equivalent for likes — the feed carries no per-user like flag and there
-  // is no "my likes" endpoint — so liked state stays session-local.
-  useEffect(() => {
-    api
-      .get('/api/food/save')
-      .then((response) => {
-        const ids = (response.data.savedFoods ?? [])
-          .map((entry) => entry?.food?._id)
-          .filter(Boolean)
-        setSavedIds(new Set(ids))
-      })
-      .catch(() => {
-        /* saved state simply stays empty */
-      })
-  }, [])
-
   // Read the current sets without closing over them, so the toggle callbacks
-  // stay referentially stable across the virtualised list.
+  // keep a stable identity across every row in the feed.
   const likedIdsRef = useLatest(likedIds)
   const savedIdsRef = useLatest(savedIds)
 
@@ -56,13 +57,13 @@ const Home = () => {
 
     try {
       const response = await api.post('/api/food/like', { foodId: item._id })
-      // The endpoint is a toggle and never returns the new count, so reconcile
-      // against which branch the server actually took.
-      const serverLiked = Boolean(response.data.like)
-      if (serverLiked === wasLiked) {
-        applyCount(setVideos, item._id, 'likeCount', serverLiked ? 1 : -1)
-        setLikedIds((prev) => setId(prev, item._id, serverLiked))
-      }
+      // The toggle now returns the resulting state and the authoritative
+      // count, so settle on those rather than trusting the optimistic guess.
+      const { isLiked, likeCount } = response.data
+      setVideos((prev) =>
+        prev.map((v) => (v._id === item._id ? { ...v, likeCount } : v)),
+      )
+      setLikedIds((prev) => setId(prev, item._id, isLiked))
     } catch {
       applyCount(setVideos, item._id, 'likeCount', -delta)
       setLikedIds((prev) => setId(prev, item._id, wasLiked))
@@ -78,11 +79,11 @@ const Home = () => {
 
     try {
       const response = await api.post('/api/food/save', { foodId: item._id })
-      const serverSaved = Boolean(response.data.save)
-      if (serverSaved === wasSaved) {
-        applyCount(setVideos, item._id, 'savesCount', serverSaved ? 1 : -1)
-        setSavedIds((prev) => setId(prev, item._id, serverSaved))
-      }
+      const { isSaved, savesCount } = response.data
+      setVideos((prev) =>
+        prev.map((v) => (v._id === item._id ? { ...v, savesCount } : v)),
+      )
+      setSavedIds((prev) => setId(prev, item._id, isSaved))
     } catch {
       applyCount(setVideos, item._id, 'savesCount', -delta)
       setSavedIds((prev) => setId(prev, item._id, wasSaved))
@@ -90,6 +91,7 @@ const Home = () => {
   }, [savedIdsRef])
 
   if (loading) return <ReelFeedSkeleton />
+  if (loadError) return <FeedError message={loadError} />
 
   return (
     <ReelFeed
@@ -105,6 +107,26 @@ const Home = () => {
 }
 
 /* ------------------------------------------------------------------ */
+
+function FeedError({ message }) {
+  return (
+    <div className="grid h-dvh place-items-center px-6 text-center">
+      <div>
+        <div className="mx-auto grid size-16 place-items-center rounded-[var(--radius-lg)] bg-white/5 text-white/40">
+          <WifiOff className="size-7" strokeWidth={1.75} />
+        </div>
+        <p className="mt-5 text-[15px] font-semibold text-white/80">{message}</p>
+        <button
+          type="button"
+          onClick={() => window.location.reload()}
+          className="mt-4 rounded-full bg-white/10 px-4 py-2 text-[13.5px] font-semibold text-white transition-colors hover:bg-white/20 focus-visible:ring-2 focus-visible:ring-white"
+        >
+          Try again
+        </button>
+      </div>
+    </div>
+  )
+}
 
 /**
  * Mirror a value into a ref so callbacks can read the latest one without

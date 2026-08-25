@@ -16,6 +16,9 @@ const saveSchema = new mongoose.Schema({
     timestamps: true
 })
 
+// One save per user per food — see the matching note in likes.model.js.
+saveSchema.index({ user: 1, food: 1 }, { unique: true })
+
 
 const saveModel = mongoose.model('save', saveSchema);
 

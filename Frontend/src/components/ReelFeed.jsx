@@ -1,16 +1,15 @@
 import React, {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
 } from 'react'
-import { Virtuoso } from 'react-virtuoso'
 import { Clapperboard } from 'lucide-react'
 
 import ReelItem from '@/components/reels/ReelItem'
 import ReelSideRail from '@/components/reels/ReelSideRail'
-import { cn } from '@/lib/utils'
 
 /**
  * Reusable feed for vertical reels.
@@ -25,10 +24,13 @@ import { cn } from '@/lib/utils'
  * - savedIds / likedIds: Set of food ids        [optional]
  * - restoreKey: sessionStorage key for position [optional]
  *
- * Virtualised with react-virtuoso: `GET /api/food` has no pagination and
- * returns every food document, so the old implementation mounted one <video>
- * per row in the database. Only a small window exists at a time now, and
- * reels outside the active window carry no video source at all.
+ * Rendered as a plain scroll-snap list rather than a virtualised one.
+ * Virtualisation was tried and removed: with each row exactly one viewport
+ * tall, react-virtuoso reserved the full scroll height but rendered zero
+ * items, leaving the feed blank. The performance goal it was there for —
+ * not holding dozens of <video> elements open — is met instead by gating the
+ * video `src` to the active reel and its immediate neighbours, so at most
+ * three videos ever hold a source.
  */
 const ReelFeed = ({
   items = [],
@@ -40,23 +42,42 @@ const ReelFeed = ({
   likedIds,
   restoreKey,
 }) => {
-  const virtuosoRef = useRef(null)
+  const scrollerRef = useRef(null)
   const [activeIndex, setActiveIndex] = useState(() => readRestoredIndex(restoreKey))
   const [muted, setMuted] = useState(true)
+  const hasRestored = useRef(false)
 
-  const activeItem = items[activeIndex] ?? items[0] ?? null
+  /**
+   * A stored index can outlive the feed it came from — a partner deletes
+   * reels, or the restore key holds a value from an older build. Pointing
+   * Virtuoso past the end renders an empty scroller, which reads to the user
+   * as "no videos", so the index is always clamped to what actually exists.
+   */
+  const safeIndex = items.length > 0 ? Math.min(activeIndex, items.length - 1) : 0
+  const activeItem = items[safeIndex] ?? null
 
-  /* ---- persist position by index (Virtuoso owns the scroller) ---- */
+  /* ---- persist position by index ---- */
   useEffect(() => {
     if (!restoreKey) return
     if (items.length === 0) return
-    sessionStorage.setItem(restoreKey, String(activeIndex))
-  }, [activeIndex, items.length, restoreKey])
+    sessionStorage.setItem(restoreKey, String(safeIndex))
+  }, [safeIndex, items.length, restoreKey])
 
   /* ---- keyboard + wheel navigation (desktop affordances) ---- */
-  const scrollToIndex = useCallback((index) => {
-    virtuosoRef.current?.scrollToIndex({ index, align: 'start', behavior: 'smooth' })
+  const scrollToIndex = useCallback((index, behavior = 'smooth') => {
+    const scroller = scrollerRef.current
+    if (!scroller) return
+    // Every row is exactly one scroller-height, so the offset is exact.
+    scroller.scrollTo({ top: index * scroller.clientHeight, behavior })
   }, [])
+
+  /* ---- restore the saved reel once, on first paint with items ---- */
+  useLayoutEffect(() => {
+    if (hasRestored.current) return
+    if (items.length === 0) return
+    hasRestored.current = true
+    if (safeIndex > 0) scrollToIndex(safeIndex, 'auto')
+  }, [items.length, safeIndex, scrollToIndex])
 
   useEffect(() => {
     const handleKey = (event) => {
@@ -65,10 +86,10 @@ const ReelFeed = ({
 
       if (event.key === 'ArrowDown' || event.key === 'j') {
         event.preventDefault()
-        scrollToIndex(Math.min(activeIndex + 1, items.length - 1))
+        scrollToIndex(Math.min(safeIndex + 1, items.length - 1))
       } else if (event.key === 'ArrowUp' || event.key === 'k') {
         event.preventDefault()
-        scrollToIndex(Math.max(activeIndex - 1, 0))
+        scrollToIndex(Math.max(safeIndex - 1, 0))
       } else if (event.key === 'm') {
         setMuted((v) => !v)
       }
@@ -76,9 +97,9 @@ const ReelFeed = ({
 
     window.addEventListener('keydown', handleKey)
     return () => window.removeEventListener('keydown', handleKey)
-  }, [activeIndex, items.length, scrollToIndex])
+  }, [safeIndex, items.length, scrollToIndex])
 
-  /* ---- stable callbacks: these cross the virtualised boundary ---- */
+  /* ---- stable callbacks shared by every row ---- */
   const handleVisible = useCallback(
     (id) => {
       const index = items.findIndex((item) => item._id === id)
@@ -106,8 +127,8 @@ const ReelFeed = ({
   )
 
   const suggestions = useMemo(
-    () => items.filter((_, index) => index !== activeIndex).slice(0, 4),
-    [items, activeIndex],
+    () => items.filter((_, index) => index !== safeIndex).slice(0, 4),
+    [items, safeIndex],
   )
 
   const itemContent = useCallback(
@@ -115,7 +136,7 @@ const ReelFeed = ({
       <ReelItem
         item={item}
         // keep the neighbours warm so the next reel starts instantly
-        active={Math.abs(index - activeIndex) <= 1}
+        active={Math.abs(index - safeIndex) <= 1}
         muted={muted}
         onToggleMute={toggleMute}
         liked={likedIds?.has(item._id) ?? false}
@@ -126,7 +147,7 @@ const ReelFeed = ({
         onVisible={handleVisible}
       />
     ),
-    [activeIndex, muted, toggleMute, likedIds, savedIds, onLike, onSave, handleShare, handleVisible],
+    [safeIndex, muted, toggleMute, likedIds, savedIds, onLike, onSave, handleShare, handleVisible],
   )
 
   if (items.length === 0) {
@@ -147,23 +168,19 @@ const ReelFeed = ({
       {/* From tablet up the feed is a centred column, never a stretched
           vertical video filling a wide viewport. */}
       <div className="relative h-full w-full md:max-w-[var(--reel-column)]">
-        <Virtuoso
-          ref={virtuosoRef}
-          data={items}
-          className={cn(
-            // `.reels-feed` is kept as the scroller's marker class: it has been
-            // the feed's identity since before the redesign.
-            'reels-feed no-scrollbar h-full w-full',
-          )}
-          style={{ height: '100%' }}
-          computeItemKey={(_, item) => item._id}
-          initialTopMostItemIndex={activeIndex}
-          // one extra screen of overscan in each direction, no more
-          increaseViewportBy={{ top: 400, bottom: 400 }}
-          itemContent={itemContent}
-          components={{ Item: SnapItem }}
-          scrollerRef={applySnapScrolling}
-        />
+        <div
+          ref={scrollerRef}
+          // `.reels-feed` is kept as the scroller's marker class: it has been
+          // the feed's identity since before the redesign.
+          className="reels-feed no-scrollbar h-full w-full snap-y snap-mandatory overflow-y-auto overscroll-y-contain"
+          role="list"
+        >
+          {items.map((item, index) => (
+            <div key={item._id} className="h-full snap-start snap-always">
+              {itemContent(index, item)}
+            </div>
+          ))}
+        </div>
       </div>
 
       <ReelSideRail
@@ -177,23 +194,6 @@ const ReelFeed = ({
       />
     </div>
   )
-}
-
-/** Every row is exactly one scroller-height, so snapping lands on one reel. */
-function SnapItem({ children, ...props }) {
-  return (
-    <div {...props} className="h-dvh snap-start snap-always">
-      {children}
-    </div>
-  )
-}
-
-function applySnapScrolling(element) {
-  if (element instanceof HTMLElement) {
-    element.style.scrollSnapType = 'y mandatory'
-    element.style.overscrollBehaviorY = 'contain'
-    element.style.webkitOverflowScrolling = 'touch'
-  }
 }
 
 function readRestoredIndex(key) {

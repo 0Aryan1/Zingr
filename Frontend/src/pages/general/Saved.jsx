@@ -13,15 +13,20 @@ const Saved = () => {
       .get('/api/food/save')
       .then((response) => {
         // The endpoint returns save wrappers, not food docs — unwrap `.food`.
-        const savedFoods = response.data.savedFoods.map((item) => ({
-          _id: item.food._id,
-          name: item.food.name,
-          video: item.food.video,
-          description: item.food.description,
-          likeCount: item.food.likeCount,
-          savesCount: item.food.savesCount,
-          foodPartner: item.food.foodPartner,
-        }))
+        // A save whose food was deleted populates as null; without this filter
+        // the map threw, the catch below swallowed it, and the page claimed
+        // nothing was saved at all.
+        const savedFoods = (response.data.savedFoods ?? [])
+          .filter((item) => item?.food?._id)
+          .map((item) => ({
+            _id: item.food._id,
+            name: item.food.name,
+            video: item.food.video,
+            description: item.food.description,
+            likeCount: item.food.likeCount,
+            savesCount: item.food.savesCount,
+            foodPartner: item.food.foodPartner,
+          }))
         setVideos(savedFoods)
       })
       .catch(() => {
