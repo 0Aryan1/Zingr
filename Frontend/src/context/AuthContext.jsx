@@ -17,6 +17,12 @@ import api from '@/lib/api'
  * effect keyed on `location.pathname`, so the request re-fired on *every*
  * navigation and flashed a full-screen "Loading..." each time. Same endpoint,
  * same response handling — just hoisted, cached, and refreshable on demand.
+ *
+ * There is deliberately no "mark signed in" shortcut. Trusting a login
+ * response body meant the app reported a session the browser had never
+ * stored: on any device that blocks the auth cookie, registration appeared to
+ * succeed and then collapsed on the first refresh. Sessions are only ever
+ * confirmed by asking the server.
  */
 const AuthContext = createContext(null)
 
@@ -31,9 +37,12 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
   const inFlight = useRef(null)
 
-  const refresh = useCallback(async () => {
-    // Collapse concurrent callers (two guards mounting at once) into one request.
-    if (inFlight.current) return inFlight.current
+  const refresh = useCallback(async ({ force = false } = {}) => {
+    // Collapse concurrent callers (two guards mounting at once) into one
+    // request. `force` opts out: a check issued right after login must not be
+    // answered by a request that was already in flight before the cookie
+    // existed, or it would report the old signed-out state.
+    if (inFlight.current && !force) return inFlight.current
 
     const request = (async () => {
       try {
@@ -66,15 +75,9 @@ export function AuthProvider({ children }) {
     refresh()
   }, [refresh])
 
-  /** Called after a successful login/register so guards see the new session. */
-  const markSignedIn = useCallback((userType, userId) => {
-    setAuth({ isAuthenticated: true, userType, userId })
-    setLoading(false)
-  }, [])
-
   const value = useMemo(
-    () => ({ ...auth, loading, refresh, markSignedIn }),
-    [auth, loading, refresh, markSignedIn],
+    () => ({ ...auth, loading, refresh }),
+    [auth, loading, refresh],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

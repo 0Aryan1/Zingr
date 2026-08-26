@@ -18,7 +18,7 @@ const RULES = {
 
 const FoodPartnerLogin = () => {
   const navigate = useNavigate()
-  const { markSignedIn } = useAuth()
+  const { refresh } = useAuth()
 
   const [values, setValues] = useState({ email: '', password: '' })
   const [errors, setErrors] = useState({})
@@ -54,7 +54,17 @@ const FoodPartnerLogin = () => {
         email: values.email,
         password: values.password,
       })
-      markSignedIn('foodPartner', response.data.foodPartnerId)
+      // Confirm the browser actually kept the session cookie before
+      // routing onward. Trusting the response body alone meant a
+      // blocked cookie looked like success and broke on refresh.
+      const session = await refresh({ force: true })
+      if (!session.isAuthenticated) {
+        setFormError(
+          'Your account is ready, but this browser did not keep you signed in. Check that cookies are enabled for this site, then try signing in.',
+        )
+        setPending(false)
+        return
+      }
       // Redirect to profile page after login
       navigate(`/food-partner/${response.data.foodPartnerId}`)
     } catch (error) {

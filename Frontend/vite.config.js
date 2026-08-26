@@ -7,6 +7,17 @@ import tailwindcss from '@tailwindcss/vite'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  server: {
+    // Mirrors the /api rewrite in vercel.json so dev is same-origin too.
+    // Without this, dev ran cross-origin 5173 -> 3000 and exercised a
+    // different cookie path than production.
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: false,
+      },
+    },
+  },
   resolve: {
     alias: {
       '@': path.resolve(path.dirname(fileURLToPath(import.meta.url)), './src'),

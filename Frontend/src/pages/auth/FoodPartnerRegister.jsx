@@ -27,7 +27,7 @@ const RULES = {
 
 const FoodPartnerRegister = () => {
   const navigate = useNavigate()
-  const { markSignedIn } = useAuth()
+  const { refresh } = useAuth()
 
   const [values, setValues] = useState({
     businessName: '',
@@ -66,7 +66,7 @@ const FoodPartnerRegister = () => {
 
     setPending(true)
     try {
-      const response = await api.post('/api/auth/food-partner/register', {
+      await api.post('/api/auth/food-partner/register', {
         name: values.businessName,
         contactName: values.contactName,
         phone: values.phone,
@@ -74,7 +74,17 @@ const FoodPartnerRegister = () => {
         password: values.password,
         address: values.address,
       })
-      markSignedIn('foodPartner', response.data?.foodPartner?._id)
+      // Confirm the browser actually kept the session cookie before
+      // routing onward. Trusting the response body alone meant a
+      // blocked cookie looked like success and broke on refresh.
+      const session = await refresh({ force: true })
+      if (!session.isAuthenticated) {
+        setFormError(
+          'Your account is ready, but this browser did not keep you signed in. Check that cookies are enabled for this site, then try signing in.',
+        )
+        setPending(false)
+        return
+      }
       // Redirect to create food page after successful registration
       navigate('/create-food')
     } catch (error) {

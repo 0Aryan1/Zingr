@@ -17,6 +17,18 @@ import api, { errorMessage } from '@/lib/api'
 import { fileSize } from '@/lib/format'
 import { cn } from '@/lib/utils'
 
+/**
+ * Vercel serverless functions reject request bodies over 4.5 MB with
+ * FUNCTION_PAYLOAD_TOO_LARGE, and the API runs as one. Larger videos were
+ * already failing — silently, part-way through the upload — so the limit is
+ * enforced here instead, before the user waits.
+ *
+ * Lifting it properly means uploading straight from the browser to ImageKit
+ * with signed auth params from the backend, bypassing the function entirely.
+ */
+const MAX_UPLOAD_BYTES = 4.5 * 1024 * 1024
+const MAX_UPLOAD_LABEL = '4.5 MB'
+
 const CreateFood = () => {
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
@@ -50,6 +62,12 @@ const CreateFood = () => {
     if (!file) return
     if (!file.type.startsWith('video/')) {
       setFileError(`Please ${verb} a valid video file.`)
+      return
+    }
+    if (file.size > MAX_UPLOAD_BYTES) {
+      setFileError(
+        `That video is ${fileSize(file.size)}. The upload limit is ${MAX_UPLOAD_LABEL} — please trim it or export at a lower quality.`,
+      )
       return
     }
     setFileError('')
@@ -90,7 +108,7 @@ const CreateFood = () => {
 
     try {
       await api.post('/api/food', formData, {
-        // The original had no progress feedback at all — submitting a 100MB
+        // The original had no progress feedback at all — submitting a large
         // video looked identical to doing nothing.
         onUploadProgress: (event) => {
           if (!event.total) return
@@ -191,7 +209,7 @@ const CreateFood = () => {
               )}
             </p>
             <p id="video-hint" className="mt-1 text-[13px] text-muted-foreground">
-              MP4, WebM or MOV · vertical 9:16 works best
+              MP4, WebM or MOV · vertical 9:16 · up to {MAX_UPLOAD_LABEL}
             </p>
           </div>
 
